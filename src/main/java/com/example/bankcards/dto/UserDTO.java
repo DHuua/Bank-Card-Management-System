@@ -1,0 +1,26 @@
+package main.java.com.example.bankcards.dto;
+
+import com.example.bankcards.entity.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDTO {
+
+    private Long id;
+    private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private Role role;
+    private boolean isActive;
+    private LocalDateTime createdAt;
+    private int cardsCount;
+}
