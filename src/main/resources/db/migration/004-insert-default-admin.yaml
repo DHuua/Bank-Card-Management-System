@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-insert-default-admin
+      author: developer
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: admin
+              - column:
+                  name: email
+                  value: admin@bankcards.com
+              - column:
+                  name: password
+                  value: $2a$10$xqJz8Z0Z0Z0Z0Z0Z0Z0Z0eKGVH3K3K3K3K3K3K3K3K3K3K3K3K3K3K
+              - column:
+                  name: first_name
+                  value: System
+              - column:
+                  name: last_name
+                  value: Administrator
+              - column:
+                  name: role
+                  value: ADMIN
+              - column:
+                  name: is_active
+                  valueBoolean: true
+      rollback:
+        - delete:
+            tableName: users
+            where: username='admin'
