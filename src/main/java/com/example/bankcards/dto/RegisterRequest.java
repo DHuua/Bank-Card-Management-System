@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.dto;
+package com.example.bankcards.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

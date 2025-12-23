@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.service;
+package com.example.bankcards.service;
 
 import com.example.bankcards.dto.CardCreateRequest;
 import com.example.bankcards.dto.CardDTO;

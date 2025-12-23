@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.util;
+package com.example.bankcards.util;
 
 import org.springframework.stereotype.Component;
 

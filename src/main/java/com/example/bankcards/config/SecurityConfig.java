@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.config;
+package com.example.bankcards.config;
 
 import com.example.bankcards.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.controller;
+package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.CardDTO;
 import com.example.bankcards.dto.UserDTO;

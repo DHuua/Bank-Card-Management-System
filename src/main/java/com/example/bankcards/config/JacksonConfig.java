@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.config;
+package com.example.bankcards.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

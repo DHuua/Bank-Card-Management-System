@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.dto;
+package com.example.bankcards.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

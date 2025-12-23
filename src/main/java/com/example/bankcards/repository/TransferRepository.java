@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.repository;
+package com.example.bankcards.repository;
 
 import com.example.bankcards.entity.Transfer;
 import com.example.bankcards.entity.TransferStatus;

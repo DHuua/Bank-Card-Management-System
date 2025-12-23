@@ -1,4 +1,4 @@
-package main.java.com.example.bankcards.config;
+package com.example.bankcards.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
