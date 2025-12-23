@@ -6,16 +6,16 @@ services:
     container_name: bankcards-postgres
     environment:
       POSTGRES_DB: TESTDB
-      POSTGRES_USER: memory
-      POSTGRES_PASSWORD: memoryishere1234
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mydhuua
     ports:
-      - "5432:5432"
+      - "5433:5433"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - bankcards-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U memory -d TESTDB"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d TESTDB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,8 +30,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/TESTDB
-      SPRING_DATASOURCE_USERNAME: memory
-      SPRING_DATASOURCE_PASSWORD: memoryishere1234
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: mydhuua
     ports:
       - "8080:8080"
     networks:

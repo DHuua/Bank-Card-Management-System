@@ -3,9 +3,9 @@ spring:
     name: bank-cards-management
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/TESTDB
-    username: memory
-    password: memoryishere1234
+    url: jdbc:postgresql://localhost:5433/TESTDB
+    username: postgres
+    password: mydhuua
     driver-class-name: org.postgresql.Driver
 
   jpa:
