@@ -33,31 +33,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/cards/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/transfers/**").hasAnyRole("USER", "ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            // CORS
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            // CSRF отключаем для REST
+            .csrf(AbstractHttpConfigurer::disable)
+            // Права доступа
+            .authorizeHttpRequests(auth -> auth
+                // Публичные эндпоинты
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/index.html",
+                    "/v3/api-docs/**",
+                    "/api-docs/**"
+                ).permitAll()
+                // Админ
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Пользователь и админ
+                .requestMatchers("/api/users/**",
+                                 "/api/cards/**",
+                                 "/api/transfers/**").hasAnyRole("USER", "ADMIN")
+                // Остальные запросы требуют аутентификации
+                .anyRequest().authenticated()
+            )
+            // Stateless сессии
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            // Провайдер аутентификации
+            .authenticationProvider(authenticationProvider())
+            // JWT фильтр перед UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // Authentication Provider для UserDetailsService + BCrypt
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -66,11 +78,13 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    // AuthenticationManager нужен для аутентификации при логине
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // BCrypt парольный энкодер
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
