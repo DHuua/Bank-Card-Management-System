@@ -1,1 +1,598 @@
 # Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.0.0
+info:
+  title: Bank Cards Management API
+  description: REST API for managing bank cards with JWT authentication, role-based access control, and card-to-card transfers
+  version: 1.0.0
+  contact:
+    name: Bank Cards Support
+    email: support@bankcards.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+  - url: https://api.bankcards.com
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: User registration and authentication endpoints
+  - name: Users
+    description: User management operations
+  - name: Cards
+    description: Bank card management operations
+  - name: Transfers
+    description: Card-to-card transfer operations
+  - name: Admin
+    description: Administrative operations
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account with USER role
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: Login with username and password to receive JWT token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh JWT token
+      description: Get a new access token using refresh token
+      operationId: refreshToken
+      parameters:
+        - name: refreshToken
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+        '400':
+          description: Invalid refresh token
+
+  /api/users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: Returns profile information of authenticated user
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Unauthorized
+
+  /api/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Admin only - retrieve user by ID
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '403':
+          description: Forbidden - Admin only
+        '404':
+          description: User not found
+
+  /api/cards:
+    post:
+      tags:
+        - Cards
+      summary: Create a new card
+      description: Create a new bank card (Admin can create for any user, User creates for themselves)
+      operationId: createCard
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateRequest'
+      responses:
+        '201':
+          description: Card created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDTO'
+        '400':
+          description: Invalid card data
+        '401':
+          description: Unauthorized
+
+  /api/cards/my:
+    get:
+      tags:
+        - Cards
+      summary: Get current user's cards
+      description: Returns paginated list of authenticated user's cards
+      operationId: getMyCards
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Cards retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CardDTO'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /api/cards/{id}:
+    get:
+      tags:
+        - Cards
+      summary: Get card by ID
+      description: Get card details (Users can only view own cards, Admins can view all)
+      operationId: getCardById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Card found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDTO'
+        '403':
+          description: Access denied
+        '404':
+          description: Card not found
+
+  /api/cards/{id}/block:
+    put:
+      tags:
+        - Cards
+      summary: Block a card
+      description: Block a card (Users can block own cards, Admins can block any card)
+      operationId: blockCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Card blocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDTO'
+        '400':
+          description: Card already blocked
+        '403':
+          description: Access denied
+
+  /api/cards/{id}/activate:
+    put:
+      tags:
+        - Cards
+      summary: Activate a card
+      description: Activate a blocked card (Admin only)
+      operationId: activateCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Card activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDTO'
+        '403':
+          description: Forbidden - Admin only
+
+  /api/transfers:
+    post:
+      tags:
+        - Transfers
+      summary: Create transfer between own cards
+      description: Transfer money between two cards owned by the authenticated user
+      operationId: createTransfer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Transfer completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDTO'
+        '400':
+          description: Invalid transfer or insufficient funds
+        '401':
+          description: Unauthorized
+
+  /api/transfers/my:
+    get:
+      tags:
+        - Transfers
+      summary: Get user's transfer history
+      description: Returns paginated list of user's transfers
+      operationId: getMyTransfers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Transfers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransferDTO'
+
+  /api/admin/dashboard:
+    get:
+      tags:
+        - Admin
+      summary: Get admin dashboard statistics
+      description: Admin only - retrieve system statistics
+      operationId: getDashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data retrieved
+        '403':
+          description: Forbidden - Admin only
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication token
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          minLength: 6
+          format: password
+          example: password123
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+
+    AuthenticationRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: john_doe
+        password:
+          type: string
+          format: password
+          example: password123
+
+    AuthenticationResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        username:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN]
+
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        cardsCount:
+          type: integer
+
+    CardCreateRequest:
+      type: object
+      required:
+        - cardNumber
+        - cardHolder
+        - expiryDate
+        - userId
+      properties:
+        cardNumber:
+          type: string
+          pattern: '^\d{16}$'
+          example: "4532015112830366"
+          description: 16-digit card number (will be encrypted)
+        cardHolder:
+          type: string
+          example: JOHN DOE
+        expiryDate:
+          type: string
+          format: date
+          example: "2027-12-31"
+        cvv:
+          type: string
+          pattern: '^\d{3}$'
+          example: "123"
+          description: 3-digit CVV (will be encrypted)
+        initialBalance:
+          type: number
+          format: double
+          example: 1000.00
+        userId:
+          type: integer
+          format: int64
+          description: User ID (required for admin creating cards)
+
+    CardDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        maskedCardNumber:
+          type: string
+          example: "**** **** **** 1234"
+          description: Masked card number showing only last 4 digits
+        cardHolder:
+          type: string
+          example: JOHN DOE
+        expiryDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED, EXPIRED]
+        balance:
+          type: number
+          format: double
+        ownerUsername:
+          type: string
+
+    TransferRequest:
+      type: object
+      required:
+        - fromCardId
+        - toCardId
+        - amount
+      properties:
+        fromCardId:
+          type: integer
+          format: int64
+          description: Source card ID
+        toCardId:
+          type: integer
+          format: int64
+          description: Destination card ID
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 100.00
+        description:
+          type: string
+          maxLength: 500
+          example: Transfer between my cards
+
+    TransferDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fromCardMasked:
+          type: string
+          example: "**** **** **** 1234"
+        toCardMasked:
+          type: string
+          example: "**** **** **** 5678"
+        amount:
+          type: number
+          format: double
+        transferDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+        description:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: Invalid card number
+        path:
+          type: string
+          example: /api/cards
+        timestamp:
+          type: string
+          format: date-time
+        validationErrors:
+          type: object
+          additionalProperties:
+            type: string
+
+security:
+  - bearerAuth: []
